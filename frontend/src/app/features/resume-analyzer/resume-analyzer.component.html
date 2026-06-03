@@ -1,0 +1,182 @@
+<div class="dashboard">
+  <section class="panel panel-form">
+    <mat-card class="form-card">
+      <mat-card-header>
+        <mat-card-title>New analysis</mat-card-title>
+        <mat-card-subtitle>Paste a CV and specify the role you are hiring for</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content [formGroup]="form">
+        @if (errorMessage(); as error) {
+          <div class="alert alert-error" role="alert">
+            <mat-icon>error_outline</mat-icon>
+            <span>{{ error }}</span>
+          </div>
+        }
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Resume text</mat-label>
+          <textarea
+            matInput
+            formControlName="resumeText"
+            rows="16"
+            placeholder="Paste the candidate's resume here..."
+          ></textarea>
+          @if (showError('resumeText')) {
+            @if (form.controls.resumeText.hasError('required')) {
+              <mat-error>Resume text is required</mat-error>
+            } @else if (form.controls.resumeText.hasError('minlength')) {
+              <mat-error>Enter at least 50 characters</mat-error>
+            }
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Target role</mat-label>
+          <input matInput formControlName="targetRole" placeholder="e.g. Full Stack Developer" />
+          @if (getTargetRoleError(); as roleError) {
+            <mat-error>{{ roleError }}</mat-error>
+          }
+        </mat-form-field>
+
+        <div class="preset-row">
+          <span class="preset-label">Quick roles:</span>
+          <mat-chip-set>
+            @for (role of rolePresets; track role) {
+              <mat-chip (click)="applyRolePreset(role)">{{ role }}</mat-chip>
+            }
+          </mat-chip-set>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions class="form-actions">
+        <button mat-stroked-button type="button" (click)="loadSample()" [disabled]="loading()">
+          <mat-icon>description</mat-icon>
+          Load sample
+        </button>
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          (click)="analyze()"
+          [disabled]="loading()"
+        >
+          @if (loading()) {
+            <mat-spinner diameter="20" class="btn-spinner" />
+          } @else {
+            <mat-icon>fact_check</mat-icon>
+          }
+          Analyze resume
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </section>
+
+  <section class="panel panel-results">
+    @if (loading()) {
+      <div class="loading-state">
+        <mat-spinner diameter="48" />
+        <p>Analyzing resume against role requirements...</p>
+      </div>
+    } @else if (result(); as analysis) {
+      <div class="results-grid">
+        <mat-card class="result-card result-card--highlight">
+          <mat-card-header>
+            <mat-icon mat-card-avatar class="card-icon">person</mat-icon>
+            <mat-card-title>Candidate summary</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p>{{ analysis.summary }}</p>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="result-card">
+          <mat-card-header>
+            <mat-icon mat-card-avatar class="card-icon card-icon--success">check_circle</mat-icon>
+            <mat-card-title>Detected skills</mat-card-title>
+            <mat-card-subtitle>{{ analysis.detectedSkills.length }} found</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            @if (analysis.detectedSkills.length) {
+              <mat-chip-set>
+                @for (skill of analysis.detectedSkills; track skill) {
+                  <mat-chip class="chip-detected">{{ skill }}</mat-chip>
+                }
+              </mat-chip-set>
+            } @else {
+              <p class="empty">No technical skills detected in the resume text.</p>
+            }
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="result-card">
+          <mat-card-header>
+            <mat-icon mat-card-avatar class="card-icon card-icon--warn">warning</mat-icon>
+            <mat-card-title>Missing skills</mat-card-title>
+            <mat-card-subtitle>Compared to target role</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            @if (analysis.missingSkills.length) {
+              <mat-chip-set>
+                @for (skill of analysis.missingSkills; track skill) {
+                  <mat-chip class="chip-missing">{{ skill }}</mat-chip>
+                }
+              </mat-chip-set>
+            } @else {
+              <p class="empty">No major skill gaps for this role.</p>
+            }
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="result-card result-card--wide">
+          <mat-card-header>
+            <mat-icon mat-card-avatar class="card-icon">rate_review</mat-icon>
+            <mat-card-title>Feedback</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <ul class="feedback-list">
+              @for (item of analysis.feedback; track item) {
+                <li>{{ item }}</li>
+              }
+            </ul>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="result-card">
+          <mat-card-header>
+            <mat-icon mat-card-avatar class="card-icon">work</mat-icon>
+            <mat-card-title>LinkedIn headline</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <blockquote class="headline">{{ analysis.linkedInHeadline }}</blockquote>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="result-card result-card--wide">
+          <mat-card-header>
+            <mat-icon mat-card-avatar class="card-icon">lightbulb</mat-icon>
+            <mat-card-title>Improvement suggestions</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <ul class="feedback-list">
+              @for (item of analysis.improvementSuggestions; track item) {
+                <li>{{ item }}</li>
+              }
+            </ul>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    } @else {
+      <mat-card class="placeholder-card">
+        <mat-card-content>
+          <mat-icon>insights</mat-icon>
+          <h2>Analysis results</h2>
+          <p>
+            Submit a resume to receive a structured review: skills match, gaps, feedback, and
+            headline suggestions.
+          </p>
+        </mat-card-content>
+      </mat-card>
+    }
+  </section>
+</div>

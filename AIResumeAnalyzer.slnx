@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/backend/" />
+  <Folder Name="/backend/src/">
+    <Project Path="backend/src/AIResumeAnalyzer.Api/AIResumeAnalyzer.Api.csproj" />
+    <Project Path="backend/src/AIResumeAnalyzer.Application/AIResumeAnalyzer.Application.csproj" />
+    <Project Path="backend/src/AIResumeAnalyzer.Domain/AIResumeAnalyzer.Domain.csproj" />
+    <Project Path="backend/src/AIResumeAnalyzer.Infrastructure/AIResumeAnalyzer.Infrastructure.csproj" />
+  </Folder>
+</Solution>
